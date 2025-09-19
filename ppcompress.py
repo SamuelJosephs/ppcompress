@@ -9,7 +9,7 @@ def compressFile(file,compressionPath):
     compressedFilePath = os.path.join(compressionPath,f_head)
     compressedFilePath += ".gz"
       
-    print(f"Compressing file {file} to {compressedFilePath}")
+    
     f_in = open(file,"rb") 
     f_out = gzip.open(compressedFilePath,"wb")
 
@@ -58,8 +58,8 @@ def processPath(path="",compressionPath="",maxThreads=1):
     
     compressFilesInParallel(files,compressionPath,maxThreads) 
 
-    print(dirs)
-    print(files)
+    
+    
 
     for dir in dirs:
         if dir == compressionPath:
