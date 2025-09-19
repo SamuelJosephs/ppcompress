@@ -31,14 +31,15 @@ def compressFilesInParallel(files,compressionPath,maxThreads):
         ex.map(compressFile,files,repeat(compressionPath))
     return 
 
-def decompressFile(path):
+def decompressFile(path,outputPath):
     import gzip 
     try:
         assert path.endswith(".gz")
 
-    
+        tail, head = os.path.split(path)
+        f_out_path = os.path.join(outputPath,head[:-3]) # remove the .gz 
         f_in = gzip.open(path,"rb")
-        f_out = open(path[:-3],"wb")
+        f_out = open(f_out_path,"wb")
 
         data = f_in.read()
         f_out.write(data)
@@ -49,10 +50,12 @@ def decompressFile(path):
         print(f"Failed to decompress {path}: {e}")
 
 
-def decompressFilesInParallel(files,maxThreads):
-    from concurrent.futures import ThreadPoolExecutor 
+def decompressFilesInParallel(files,maxThreads,decompressionPath):
+    from concurrent.futures import ThreadPoolExecutor
+    from itertools import repeat 
+    
     tp = ThreadPoolExecutor(max_workers=maxThreads)
-    tp.map(decompressFile,files)
+    tp.map(decompressFile,files,repeat(decompressionPath))
     return 
 
 def processPath(path="",compressionPath="",maxThreads=1,compress=True):
@@ -62,9 +65,10 @@ def processPath(path="",compressionPath="",maxThreads=1,compress=True):
     if compressionPath == "" and compress:
         _, pathHead = os.path.split(path)
         compressionPath = os.path.join(path,pathHead + ".ppc")
-        
         os.makedirs(compressionPath,exist_ok=True)
 
+    elif compressionPath == "" and not compress:
+        compressionPath = path + ".ppd" 
 
     
 
@@ -83,7 +87,7 @@ def processPath(path="",compressionPath="",maxThreads=1,compress=True):
     else:
         # rootpath becomes the path to the root file to decompress
         if os.path.isfile(path) and path.endswith(".gz"):
-            decompressFile(path)
+            decompressFile(path,compressionPath)
 
         elif os.path.isdir(path):
             it = os.scandir(path)
@@ -93,8 +97,7 @@ def processPath(path="",compressionPath="",maxThreads=1,compress=True):
                         files.append(entry.path)
                 elif os.path.isdir(entry):
                     dirs.append(entry.path)
-        decompressFilesInParallel(files,maxThreads)    
-
+        decompressFilesInParallel(files,maxThreads,compressionPath)    
     for dir in dirs:
         if compress:
             if dir == compressionPath:
@@ -110,7 +113,15 @@ def processPath(path="",compressionPath="",maxThreads=1,compress=True):
             processPath(path=dir,compressionPath=newCompressionPath,maxThreads=maxThreads,compress=compress)
         else:
             # Decompress the files then recurse through directories
-            processPath(path=dir,compressionPath="",maxThreads=maxThreads,compress=compress)
+            if dir == compressionPath:
+                continue
+            _, pathHead = os.path.split(dir)
+            newDecompressionpath = os.path.join(compressionPath,pathHead)
+            try:
+                os.makedirs(newDecompressionpath,exist_ok=True)
+            except Exception as e:
+                print(f"Failed to create directory {newDecompressionpath}: {e}")
+            processPath(path=dir,compressionPath=newDecompressionpath,maxThreads=maxThreads,compress=compress)
     return
 
 if __name__ == "__main__":
@@ -152,7 +163,7 @@ if __name__ == "__main__":
                     -rootPath: The path from which recursive compression should start
                     -o: The output directory for the recursive compression.
                     -c: Compress (default)
-                    -d: Decompress, this changes the behaviour of -rootPath to be the path to the root file decompress
+                    -d: Decompress, this changes the behaviour of -rootPath to be the path to the root file decompress and -o the root directory to decompress into.
                     """)
         elif sys.argv[i-1] not in ["-h","-j","-rootPath","-o"]:
             sys.exit(f"Error: Unrecognised command line argument {arg}")
