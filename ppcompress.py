@@ -72,7 +72,7 @@ def processPath(path="",compressionPath="",maxThreads=1):
         except Exception as e:
             print(f"Failed to create directory {newCompressionPath}: {e}")
 
-        processPath(path=dir,compressionPath=newCompressionPath)
+        processPath(path=dir,compressionPath=newCompressionPath,maxThreads=maxThreads)
 
 if __name__ == "__main__":
     import sys 
