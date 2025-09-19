@@ -103,7 +103,7 @@ if __name__ == "__main__":
                 sys.exit("Error: No argument for -rootPath command option")
             rootPath = os.path.abspath(sys.argv[i+1])
         elif arg == "-h":
-            print(f"""Options:\n -j: Number of threads for parallel compression\n -rootPath: The path from which recursive compression should start
+            sys.exit(f"""Options:\n -j: Number of threads for parallel compression\n -rootPath: The path from which recursive compression should start
                     \n -o: The output directory for the recursive compression.
                     """)
         elif sys.argv[i-1] not in ["-h","-j","-rootPath","-o"]:
