@@ -108,6 +108,7 @@ if __name__ == "__main__":
                     """)
         elif sys.argv[i-1] not in ["-h","-j","-rootPath","-o"]:
             sys.exit(f"Error: Unrecognised command line argument {arg}")
-    os.makedirs(outputPath,exist_ok=True)        
+    if outputPath != "":
+        os.makedirs(outputPath,exist_ok=True)        
     processPath(path=rootPath,compressionPath=outputPath,maxThreads=maxThreads)
 
