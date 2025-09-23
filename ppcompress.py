@@ -2,16 +2,16 @@ import os
 
 
 def compressFile(file,compressionPath):
-    import gzip 
+    import bz2 
     import shutil 
     f_tail, f_head = os.path.split(file)
     
     compressedFilePath = os.path.join(compressionPath,f_head)
-    compressedFilePath += ".gz"
+    compressedFilePath += ".bz"
       
     
     f_in = open(file,"rb") 
-    f_out = gzip.open(compressedFilePath,"wb")
+    f_out = bz2.open(compressedFilePath,"wb")
 
 
     shutil.copyfileobj(f_in,f_out)
@@ -20,7 +20,6 @@ def compressFile(file,compressionPath):
     return 
 
 def compressFilesInParallel(files,compressionPath,maxThreads):
-    import gzip
     from functools import partial 
     from concurrent.futures import ThreadPoolExecutor
     from itertools import repeat
@@ -32,13 +31,13 @@ def compressFilesInParallel(files,compressionPath,maxThreads):
     return 
 
 def decompressFile(path,outputPath):
-    import gzip 
+    import bz2
     try:
-        assert path.endswith(".gz")
+        assert path.endswith(".bz")
 
         tail, head = os.path.split(path)
-        f_out_path = os.path.join(outputPath,head[:-3]) # remove the .gz 
-        f_in = gzip.open(path,"rb")
+        f_out_path = os.path.join(outputPath,head[:-3]) # remove the .bz 
+        f_in = bz2.open(path,"rb")
         f_out = open(f_out_path,"wb")
 
         data = f_in.read()
@@ -86,14 +85,14 @@ def processPath(path="",compressionPath="",maxThreads=1,compress=True):
         compressFilesInParallel(files,compressionPath,maxThreads) 
     else:
         # rootpath becomes the path to the root file to decompress
-        if os.path.isfile(path) and path.endswith(".gz"):
+        if os.path.isfile(path) and path.endswith(".bz"):
             decompressFile(path,compressionPath)
 
         elif os.path.isdir(path):
             it = os.scandir(path)
             for entry in it:
                 if os.path.isfile(entry):
-                    if entry.name.endswith(".gz"):
+                    if entry.name.endswith(".bz"):
                         files.append(entry.path)
                 elif os.path.isdir(entry):
                     dirs.append(entry.path)
